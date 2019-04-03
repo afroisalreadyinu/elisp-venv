@@ -1,3 +1,33 @@
+;;; elisp-venv.el --- Elisp virtual environment
+
+;; Author: Ulas Tuerkmen <ulas.tuerkmen at gmail dot com>
+;; URL: http://github.com/afroisalreadyinu/elisp-venv
+;; Version: 0.9.2
+;; Keywords: tools, tdd, elisp
+;; Package-Requires: ((f "0.20.0"))
+;;
+;; Copyright (C) 2011 Ulas Tuerkmen
+;;
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program. If not, see <http://www.gnu.org/licenses/>.
+;;
+;;; Commentary:
+;;
+;; Create a virtual environment which installs the dependencies of a package in
+;; a sandbox.
+
+(require 'f)
+
 (defgroup elisp-venv nil
   "Elisp virtual environments."
   :group 'elisp)
@@ -9,11 +39,6 @@
 (defcustom elisp-venv-base-directory "~/.elisp-venv/%s-sandbox"
   "The directory in which the virtual environments are created")
 
-(cl-defstruct (package-fields
-	       (:constructor create-package-fields
-			     ())))
-
-(defun elisp-venv-get-package-data(filename)
 
 (defun run-elisp-tests ()
   (let ((tests (mapcar (lambda (x) (intern (substring x (length  "-run-test="))))
@@ -37,31 +62,30 @@
 
 (defvar install-file-content
   (string-join
-   '("(require '%s)"
-     "(find-file (find-lisp-object-file-name '%s 'defvar))"
+   '("(require '%1$s)"
+     "(find-file (find-lisp-object-file-name '%1$s 'defvar))"
      "(let ((package (package-buffer-info)))"
      "  (package-download-transaction"
      "   (package-compute-transaction nil (package-desc-reqs package))))")
    "\n"))
 
+(defun elisp-venv-create-directories(package-name)
+  """Create the directories for installing dependcies etc.,
+  return command that will actually do so"""
+  (let* ((venv-directory (format elisp-venv-base-directory package-name))
+	 (init-file-path (f-join venv-directory "init.el"))
+	 (install-file-path (f-join venv-directory "install.el"))
+	 (packages-dir (f-join venv-directory "packages")))
+    (make-directory venv-directory)
+    (write-to-file init-file-path (format init-file-content packages-dir))
+    (write-to-file install-file-path
+		   (format install-file-content package-name))
+    (makedir packages-dir)
+    (format "emacs -q -L . -l %s -l %s" init-file-path install-file-path)))
+
 (defun create-package-sandbox ()
   """Create a sandbox directory with necessary files, spit out command to install"""
   (interactive)
-  (let* ((package (save-excursion (package-buffer-info)))
-	 (sandbox-directory (format elisp-venv-base-directory (package-desc-name package)))
-	 (init-file-path (abl-mode-concat-paths sandbox-directory "init.el"))
-	 (install-file-path (abl-mode-concat-paths sandbox-directory "install.el"))
-	 (packages-dir (abl-mode-concat-paths sandbox-directory "packages")))
-    ;; create base directory
-    (make-directory sandbox-directory)
-    ;; write init.el
-    (write-to-file init-file-path (format init-file-content packages-dir))
-    ;; write install file
-    (write-to-file install-file-path
-		   (format install-file-content
-			   (package-desc-name package)
-			   (package-desc-name package)))
-    (makedir packages-dir)
-    (kill-new (format "emacs -q -L . -l %s -l %s"
-		      init-file-path
-		      install-file-path))))
+  (let ((command (elisp-venv-create-directories
+		  (package-desc-name (save-excursion (package-buffer-info))))))
+    (shell-command command)))
