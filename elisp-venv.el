@@ -1,3 +1,20 @@
+(defgroup elisp-venv nil
+  "Elisp virtual environments."
+  :group 'elisp)
+
+(defvar elisp-venv-mode nil
+  "Mode variable for elisp-venv-mode")
+(make-variable-buffer-local 'elisp-venv-mode)
+
+(defcustom elisp-venv-base-directory "~/.elisp-venv/%s-sandbox"
+  "The directory in which the virtual environments are created")
+
+(cl-defstruct (package-fields
+	       (:constructor create-package-fields
+			     ())))
+
+(defun elisp-venv-get-package-data(filename)
+
 (defun run-elisp-tests ()
   (let ((tests (mapcar (lambda (x) (intern (substring x (length  "-run-test="))))
 		       (seq-filter (lambda (x) (abl-mode-starts-with x "-run-test="))
@@ -31,7 +48,7 @@
   """Create a sandbox directory with necessary files, spit out command to install"""
   (interactive)
   (let* ((package (save-excursion (package-buffer-info)))
-	 (sandbox-directory (format "~/temp/%s-sandbox" (package-desc-name package)))
+	 (sandbox-directory (format elisp-venv-base-directory (package-desc-name package)))
 	 (init-file-path (abl-mode-concat-paths sandbox-directory "init.el"))
 	 (install-file-path (abl-mode-concat-paths sandbox-directory "install.el"))
 	 (packages-dir (abl-mode-concat-paths sandbox-directory "packages")))
