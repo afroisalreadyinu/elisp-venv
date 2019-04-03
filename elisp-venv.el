@@ -67,6 +67,7 @@
      "(let ((package (package-buffer-info)))"
      "  (package-download-transaction"
      "   (package-compute-transaction nil (package-desc-reqs package))))"
+     "(print \"SUCCESS\")"
      "(kill-emacs 0)")
    "\n"))
 
@@ -85,18 +86,21 @@
     (f-write-text (format elisp-venv-install-file-content package-name)
 		  'utf-8 install-file-path)
     (condition-case nil (make-directory packages-dir) (error nil))
-    (format "emacs -q -L . -l %s -l %s" init-file-path install-file-path)))
+    (format "emacs --batch -q -L . -l %s -l %s &" init-file-path install-file-path)))
 
 (defun create-package-sandbox ()
   """Create a sandbox directory with necessary files, spit out command to install"""
   (interactive)
   (let ((command (elisp-venv-create-directories (elisp-venv-current-package-name))))
-
     ;;(message command)))
     (shell-command command)))
 
 (defun elisp-venv-delete-venv()
   """Delete the virtual environment for the package in buffer"""
   (interactive)
-  (let ((package-name (elisp-venv-current-package-name)))
-    (f-delete (format elisp-venv-base-directory package-name) 't)))
+  (let* ((package-name (elisp-venv-current-package-name))
+	 (venv-dir (format elisp-venv-base-directory package-name)))
+    (if (f-exists? venv-dir)
+	(progn (f-delete venv-dir 't)
+	       (message "Deleted venv for %s" package-name))
+      (message "No venv for %s" package-name))))
