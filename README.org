@@ -1,0 +1,4 @@
+* elisp-venv
+
+This is an Emacs package to enable running tests in virtual environments. It is
+inspired by [[https://docs.python.org/3/tutorial/venv.html][Python virtual environments]].
