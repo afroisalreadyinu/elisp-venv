@@ -1,3 +1,12 @@
+(defun run-elisp-tests ()
+  (let ((tests (mapcar (lambda (x) (intern (substring x (length  "-run-test="))))
+		       (seq-filter (lambda (x) (abl-mode-starts-with x "-run-test="))
+				   command-line-args-left))))
+    (setq command-line-args-left nil)
+    (if tests
+	(ert `(member ,@tests))
+      (ert 't))))
+
 (defvar init-file-content
   (string-join
    '("(custom-set-variables"
@@ -39,7 +48,3 @@
     (kill-new (format "emacs -q -L . -l %s -l %s"
 		      init-file-path
 		      install-file-path))))
-
-
-
-(run-elisp-tests)
