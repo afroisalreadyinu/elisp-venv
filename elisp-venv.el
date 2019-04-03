@@ -40,7 +40,7 @@
   "The directory in which the virtual environments are created")
 
 
-(defun run-elisp-tests ()
+(defun elisp-venv-run-elisp-tests ()
   (let ((tests (mapcar (lambda (x) (intern (substring x (length  "-run-test="))))
 		       (seq-filter (lambda (x) (abl-mode-starts-with x "-run-test="))
 				   command-line-args-left))))
@@ -49,7 +49,7 @@
 	(ert `(member ,@tests))
       (ert 't))))
 
-(defvar init-file-content
+(defvar elisp-venv-init-file-content
   (string-join
    '("(custom-set-variables"
      " '(package-user-dir \"%s\"))"
@@ -60,14 +60,18 @@
      "  (package-refresh-contents))")
    "\n"))
 
-(defvar install-file-content
+(defvar elisp-venv-install-file-content
   (string-join
    '("(require '%1$s)"
      "(find-file (find-lisp-object-file-name '%1$s 'defvar))"
      "(let ((package (package-buffer-info)))"
      "  (package-download-transaction"
-     "   (package-compute-transaction nil (package-desc-reqs package))))")
+     "   (package-compute-transaction nil (package-desc-reqs package))))"
+     "(kill-emacs 0)")
    "\n"))
+
+(defun elisp-venv-current-package-name()
+    (package-desc-name (save-excursion (package-buffer-info))))
 
 (defun elisp-venv-create-directories(package-name)
   """Create the directories for installing dependcies etc.,
@@ -76,16 +80,23 @@
 	 (init-file-path (f-join venv-directory "init.el"))
 	 (install-file-path (f-join venv-directory "install.el"))
 	 (packages-dir (f-join venv-directory "packages")))
-    (make-directory venv-directory)
-    (write-to-file init-file-path (format init-file-content packages-dir))
-    (write-to-file install-file-path
-		   (format install-file-content package-name))
-    (makedir packages-dir)
+    (condition-case nil (make-directory venv-directory 't) (error nil))
+    (f-write-text (format elisp-venv-init-file-content packages-dir) 'utf-8 init-file-path)
+    (f-write-text (format elisp-venv-install-file-content package-name)
+		  'utf-8 install-file-path)
+    (condition-case nil (make-directory packages-dir) (error nil))
     (format "emacs -q -L . -l %s -l %s" init-file-path install-file-path)))
 
 (defun create-package-sandbox ()
   """Create a sandbox directory with necessary files, spit out command to install"""
   (interactive)
-  (let ((command (elisp-venv-create-directories
-		  (package-desc-name (save-excursion (package-buffer-info))))))
+  (let ((command (elisp-venv-create-directories (elisp-venv-current-package-name))))
+
+    ;;(message command)))
     (shell-command command)))
+
+(defun elisp-venv-delete-venv()
+  """Delete the virtual environment for the package in buffer"""
+  (interactive)
+  (let ((package-name (elisp-venv-current-package-name)))
+    (f-delete (format elisp-venv-base-directory package-name) 't)))
