@@ -86,14 +86,13 @@
     (f-write-text (format elisp-venv-install-file-content package-name)
 		  'utf-8 install-file-path)
     (condition-case nil (make-directory packages-dir) (error nil))
-    (format "emacs --batch -q -L . -l %s -l %s &" init-file-path install-file-path)))
+    (format "emacs --batch -q -L . -l %s -l %s" init-file-path install-file-path)))
 
-(defun create-package-sandbox ()
+(defun elisp-venv-create-package-venv ()
   """Create a sandbox directory with necessary files, spit out command to install"""
   (interactive)
   (let ((command (elisp-venv-create-directories (elisp-venv-current-package-name))))
-    ;;(message command)))
-    (shell-command command)))
+    (async-shell-command command)))
 
 (defun elisp-venv-delete-venv()
   """Delete the virtual environment for the package in buffer"""
