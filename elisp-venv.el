@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; elisp-venv.el --- Elisp virtual environment
 
 ;; Author: Ulas Tuerkmen <ulas.tuerkmen at gmail dot com>
@@ -32,13 +33,14 @@
   "Elisp virtual environments."
   :group 'elisp)
 
-(defvar elisp-venv-mode nil
-  "Mode variable for elisp-venv-mode")
-(make-variable-buffer-local 'elisp-venv-mode)
-
-(defcustom elisp-venv-base-directory "~/.elisp-venv/%s-sandbox"
+(defcustom elisp-venv-base-directory "~/.elisp-venv"
   "The directory in which the virtual environments are created")
 
+(defcustom elisp-venv-use-git-branch nil
+  "Whether to use the git branch name in the venv path")
+
+(defcustom elisp-venv-directory-suffix "-sandbox"
+  "The suffix appended to the directory path of sandbox")
 
 (defun elisp-venv-run-elisp-tests ()
   (let ((tests (mapcar (lambda (x) (intern (substring x (length  "-run-test="))))
@@ -72,12 +74,23 @@
    "\n"))
 
 (defun elisp-venv-current-package-name()
+  """Get package name from the current file"""
     (package-desc-name (save-excursion (package-buffer-info))))
+
+(defun elisp-venv-dir-path-from-package-name(package-name)
+  """Generate venv directory path from package-name"""
+  (let ((branch-part (if elisp-venv-use-git-branch
+			 (let ((git-branch (shell-command-to-string "git branch")))
+			   (if (equal git-branch "") ""
+			     (concat "-" git-branch)))
+		       ""))
+	(directory-name (concat package-name branch-part elisp-venv-directory-suffix)))
+    (f-join elisp-venv-base-directory directory-name)))
 
 (defun elisp-venv-create-directories(package-name)
   """Create the directories for installing dependcies etc.,
   return command that will actually do so"""
-  (let* ((venv-directory (format elisp-venv-base-directory package-name))
+  (let* ((venv-directory (elisp-venv-dir-path-from-package-name package-name))
 	 (init-file-path (f-join venv-directory "init.el"))
 	 (install-file-path (f-join venv-directory "install.el"))
 	 (packages-dir (f-join venv-directory "packages")))
@@ -88,8 +101,12 @@
     (condition-case nil (make-directory packages-dir) (error nil))
     (format "emacs --batch -q -L . -l %s -l %s" init-file-path install-file-path)))
 
+;;
+;;  Interactive commands
+;;
+
 (defun elisp-venv-create-package-venv ()
-  """Create a sandbox directory with necessary files, spit out command to install"""
+  """Create a sandbox directory and install dependencies for current package file"""
   (interactive)
   (let ((command (elisp-venv-create-directories (elisp-venv-current-package-name))))
     (async-shell-command command)))
@@ -103,3 +120,5 @@
 	(progn (f-delete venv-dir 't)
 	       (message "Deleted venv for %s" package-name))
       (message "No venv for %s" package-name))))
+
+(provide 'elisp-venv)
