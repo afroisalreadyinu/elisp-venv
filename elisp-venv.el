@@ -28,6 +28,7 @@
 ;; a sandbox.
 
 (require 'f)
+(require 's)
 
 (defgroup elisp-venv nil
   "Elisp virtual environments."
@@ -36,7 +37,7 @@
 (defcustom elisp-venv-base-directory "~/.elisp-venv"
   "The directory in which the virtual environments are created")
 
-(defcustom elisp-venv-use-git-branch nil
+(defcustom elisp-venv-use-git-branch 't
   "Whether to use the git branch name in the venv path")
 
 (defcustom elisp-venv-directory-suffix "-sandbox"
@@ -79,12 +80,14 @@
 
 (defun elisp-venv-dir-path-from-package-name(package-name)
   """Generate venv directory path from package-name"""
-  (let ((branch-part (if elisp-venv-use-git-branch
-			 (let ((git-branch (shell-command-to-string "git branch")))
-			   (if (equal git-branch "") ""
-			     (concat "-" git-branch)))
-		       ""))
-	(directory-name (concat package-name branch-part elisp-venv-directory-suffix)))
+  (let* ((branch-part (if elisp-venv-use-git-branch
+			  (let ((git-branch (s-trim
+					     (shell-command-to-string
+					      "git rev-parse --abbrev-ref HEAD"))))
+			    (if (equal git-branch "") ""
+			      (concat "-" git-branch)))
+			""))
+	 (directory-name (concat package-name branch-part elisp-venv-directory-suffix)))
     (f-join elisp-venv-base-directory directory-name)))
 
 (defun elisp-venv-create-directories(package-name)
