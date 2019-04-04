@@ -53,26 +53,24 @@
       (ert 't))))
 
 (defvar elisp-venv-init-file-content
-  (string-join
+  (s-join "\n"
    '("(custom-set-variables"
      " '(package-user-dir \"%s\"))"
      "(require 'package)"
      "(add-to-list 'package-archives (cons \"melpa\" \"https://melpa.org/packages/\") t)"
      "(package-initialize)"
      "(when (not package-archive-contents)"
-     "  (package-refresh-contents))")
-   "\n"))
+     "  (package-refresh-contents))")))
 
 (defvar elisp-venv-install-file-content
-  (string-join
+  (s-join "\n"
    '("(require '%1$s)"
      "(find-file (find-lisp-object-file-name '%1$s 'defvar))"
      "(let ((package (package-buffer-info)))"
      "  (package-download-transaction"
      "   (package-compute-transaction nil (package-desc-reqs package))))"
      "(print \"SUCCESS\")"
-     "(kill-emacs 0)")
-   "\n"))
+     "(kill-emacs 0)")))
 
 (defun elisp-venv-current-package-name()
   """Get package name from the current file"""
