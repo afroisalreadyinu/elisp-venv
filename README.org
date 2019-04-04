@@ -2,11 +2,3 @@
 
 This is an Emacs package to enable running tests in virtual environments. It is
 inspired by [[https://docs.python.org/3/tutorial/venv.html][Python virtual environments]].
-
-** Todos
-
-*** TODO CL struct for package information
-
-*** TODO Command to create a sandbox and install dependencies
-
-*** TODO Command to run unit tests in the sandbox
