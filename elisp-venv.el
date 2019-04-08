@@ -5,7 +5,7 @@
 ;; URL: http://github.com/afroisalreadyinu/elisp-venv
 ;; Version: 0.9.2
 ;; Keywords: tools, tdd, elisp
-;; Package-Requires: ((f "0.20.0"))
+;; Package-Requires: ((f "0.20.0") (s "1.12.0") (mocker "0.3.1"))
 ;;
 ;; Copyright (C) 2011 Ulas Tuerkmen
 ;;
@@ -89,8 +89,8 @@
     (f-join elisp-venv-base-directory directory-name)))
 
 (defun elisp-venv-create-directories(package-name)
-  """Create the directories for installing dependcies etc.,
-  return command that will actually do so"""
+  """Create the directories for dependencies etc.,return command
+     that will run Emacs in batch mode"""
   (let* ((venv-directory (elisp-venv-dir-path-from-package-name package-name))
 	 (init-file-path (f-join venv-directory "init.el"))
 	 (install-file-path (f-join venv-directory "install.el"))
