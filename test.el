@@ -19,7 +19,8 @@
 
 (defmacro with-custom-var(custom-vars &rest body)
   """Run code with temporary customization options"""
-  `(let ((old-values (mapcar (lambda (x) (cons (car x) (symbol-value (car x)))) ',custom-vars)))
+  `(let ((old-values (mapcar (lambda (x) (cons (car x) (symbol-value (car x))))
+			     ',custom-vars)))
      (unwind-protect
 	 (progn
 	   ,@(mapcar (lambda (x) `(setq ,(car x) ,(cadr x))) custom-vars)
@@ -33,7 +34,11 @@
 			(f-full "~/.elisp-venv/the-package-master-sandbox"))))
   (with-custom-var ((elisp-venv-use-git-branch nil))
 	(should (string-equal (elisp-venv-dir-path-from-package-name "the-package")
-			      (f-full "~/.elisp-venv/the-package-sandbox")))))
+			      (f-full "~/.elisp-venv/the-package-sandbox"))))
+  (with-custom-var ((elisp-venv-use-git-branch nil)
+		    (elisp-venv-directory-suffix "-blah"))
+	(should (string-equal (elisp-venv-dir-path-from-package-name "the-package")
+			      (f-full "~/.elisp-venv/the-package-blah")))))
 
 (ert-deftest test-create-directories ()
   (mocker-let ((make-directory (package-name)
