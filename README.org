@@ -2,19 +2,3 @@
 
 This is an Emacs package to enable running tests in virtual environments. It is
 inspired by [[https://docs.python.org/3/tutorial/venv.html][Python virtual environments]].
-
-** Todos
-
-- Add mode stuff and keybindings
-
-- Running ert tests in venv (how to pick which venv?)
-
-- Test elisp-venv-create-directories
-
-- Test elisp-venv-create-package-venv
-
-- Test elisp-venv-delete-venv
-
-- Implement and test running ert tests
-
-- Implement and test interactive commands for running ert tests

@@ -1,0 +1,16 @@
+** DONE Add mode stuff and keybindings
+    CLOSED: [2019-04-18 Thu 14:07]
+
+* TODO Access package info from test file
+
+* TODO Running ert tests in venv (how to pick which venv?)
+
+* TODO Test elisp-venv-create-directories
+
+* TODO Test elisp-venv-create-package-venv
+
+* TODO Test elisp-venv-delete-venv
+
+* TODO Implement and test running ert tests
+
+* TODO Implement and test interactive commands for running ert tests
