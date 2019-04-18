@@ -102,6 +102,14 @@
   `(when (not ,test-form)
      (error "Assertion failed: %s" (format "%s" ',test-form))))
 
+(defun elisp-venv-elisp-files-in-same-dir(file-path)
+  (f-files (f-dirname file-path) (lambda (file) (equal (f-ext file) "el"))))
+
+(defun elisp-venv-file-package-name(file-path)
+  (let ((all-el-files (elisp-venv-elisp-files-in-same-dir file-path)))
+    ()))
+
+
 (defun elisp-venv-current-package-name()
   """Get package name from the current file"""
     (symbol-name (package-desc-name (save-excursion (package-buffer-info)))))
