@@ -34,6 +34,32 @@
   "Elisp virtual environments."
   :group 'elisp)
 
+(defvar elisp-venv-mode nil
+  "Mode variable for elisp-venv-mode.")
+(make-variable-buffer-local 'elisp-venv-mode)
+
+;;;###autoload
+(defun elisp-venv-mode (&optional arg)
+  (interactive "P")
+  (setq elisp-venv-mode (if (null arg) (not elisp-venv-mode)
+			  (> (prefix-numeric-value arg) 0))))
+
+;;;###autoload
+(defun elisp-venv-mode-hook ()
+  (elisp-venv-mode))
+
+(if (not (assq 'elisp-venv-mode minor-mode-alist))
+    (setq minor-mode-alist
+	  (cons '(elips-venv-mode " elisp-venv-mode")
+		minor-mode-alist)))
+
+(defvar elisp-venv-mode-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c t") 'elisp-venv-mode-run-test-at-point)
+    (define-key map (kbd "C-c u") 'elisp-venv-mode-rerun-last-test)
+    map)
+  "The keymap for elisp-venv-mode")
+
 (defcustom elisp-venv-base-directory "~/.elisp-venv"
   "The directory in which the virtual environments are created")
 
@@ -72,12 +98,17 @@
      "(print \"SUCCESS\")"
      "(kill-emacs 0)")))
 
+(defmacro assert (test-form)
+  `(when (not ,test-form)
+     (error "Assertion failed: %s" (format "%s" ',test-form))))
+
 (defun elisp-venv-current-package-name()
   """Get package name from the current file"""
-    (package-desc-name (save-excursion (package-buffer-info))))
+    (symbol-name (package-desc-name (save-excursion (package-buffer-info)))))
 
 (defun elisp-venv-dir-path-from-package-name(package-name)
   """Generate venv directory path from package-name"""
+  (assert (stringp package-name))
   (let* ((branch-part (if elisp-venv-use-git-branch
 			  (let ((git-branch (s-trim
 					     (shell-command-to-string
